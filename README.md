@@ -61,3 +61,9 @@ macOS 26 / iOS 26, Swift 6.2. No external dependencies.
 ```
 swift test
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+Bundled or downloaded models keep their own licences; see the notes above where a model is named.
