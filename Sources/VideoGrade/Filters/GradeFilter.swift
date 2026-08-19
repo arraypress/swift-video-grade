@@ -15,6 +15,7 @@ import Foundation
 /// — grading obeys the same parity rule as captions.
 public struct GradeFilter: @unchecked Sendable {
 
+    /// The grade this filter was built from, exactly as given.
     public let grade: VideoGrade
     /// Parsed LUT, ready for `CIColorCube`.
     private let lut: (dimension: Int, data: Data)?
@@ -90,13 +91,23 @@ public struct GradeFilter: @unchecked Sendable {
             // warmer, matching the slider and Lightroom). CITemperatureAndTint's
             // targetNeutral is the opposite — a LOWER target Kelvin warms the
             // image — so reflect the value around 6500 before handing it over.
-            let target = 13_000 - grade.temperature
+            //
+            // Clamped first, symmetrically: the reflection means the value
+            // and 13000 minus it both reach the filter, and Kelvin below
+            // about 2000 is off the Planckian locus — not a warmer white but
+            // a degenerate one (13000K in came back with blue above red).
+            // 2000–11000 keeps both ends on the locus, and spans candlelight
+            // to arctic shade, which is every white balance a slider has
+            // business setting.
+            let temperature = min(max(grade.temperature, 2_000), 11_000)
+            let target = 13_000 - temperature
             // Tint is inverted the same way: CITemperatureAndTint's target.y
             // positive shifts the image GREEN, but the slider (and Lightroom)
             // treat positive tint as MAGENTA — so negate it.
+            let tint = min(max(grade.tint, -150), 150)
             image = image.applyingFilter("CITemperatureAndTint", parameters: [
                 "inputNeutral": CIVector(x: 6500, y: 0),
-                "inputTargetNeutral": CIVector(x: target, y: -grade.tint),
+                "inputTargetNeutral": CIVector(x: target, y: -tint),
             ])
         }
         if grade.highlights != 1 || grade.shadows != 0 {
@@ -389,60 +400,3 @@ public struct GradeFilter: @unchecked Sendable {
     }
 }
 
-// MARK: - .cube parsing
-
-/// Parses Adobe/Resolve `.cube` LUT files into `CIColorCube` data.
-public enum CubeParser {
-
-    public enum CubeError: Error, LocalizedError {
-        case unreadable
-        case missingSize
-        case wrongEntryCount(expected: Int, got: Int)
-
-        public var errorDescription: String? {
-            switch self {
-            case .unreadable: return "The LUT file could not be read."
-            case .missingSize: return "The LUT file has no LUT_3D_SIZE."
-            case .wrongEntryCount(let expected, let got):
-                return "The LUT has \(got) entries; expected \(expected)."
-            }
-        }
-    }
-
-    /// Parses a `.cube` file into `(dimension, RGBA float32 data)`.
-    public static func parse(contentsOf url: URL) throws -> (dimension: Int, data: Data) {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else {
-            throw CubeError.unreadable
-        }
-        return try parse(text)
-    }
-
-    public static func parse(_ text: String) throws -> (dimension: Int, data: Data) {
-        var dimension = 0
-        var values: [Float] = []
-
-        for rawLine in text.split(whereSeparator: \.isNewline) {
-            let line = rawLine.trimmingCharacters(in: .whitespaces)
-            if line.isEmpty || line.hasPrefix("#") { continue }
-            let upper = line.uppercased()
-            if upper.hasPrefix("LUT_3D_SIZE") {
-                dimension = Int(line.split(separator: " ").last.map(String.init) ?? "") ?? 0
-                values.reserveCapacity(dimension * dimension * dimension * 4)
-                continue
-            }
-            if upper.hasPrefix("TITLE") || upper.hasPrefix("DOMAIN_") || upper.hasPrefix("LUT_1D") { continue }
-
-            let parts = line.split(separator: " ").compactMap { Float($0) }
-            if parts.count == 3 {
-                values.append(contentsOf: [parts[0], parts[1], parts[2], 1])
-            }
-        }
-
-        guard dimension > 1 else { throw CubeError.missingSize }
-        let expected = dimension * dimension * dimension * 4
-        guard values.count == expected else {
-            throw CubeError.wrongEntryCount(expected: expected / 4, got: values.count / 4)
-        }
-        return (dimension, values.withUnsafeBufferPointer { Data(buffer: $0) })
-    }
-}

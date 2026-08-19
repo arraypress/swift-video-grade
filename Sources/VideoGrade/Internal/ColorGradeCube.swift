@@ -125,7 +125,8 @@ enum ColorGradeCube {
     private static func clamp01(_ v: Double) -> Double { min(1, max(0, v)) }
 
     /// A curve counts as active only if it bends away from the identity line.
-    private static func isActive(_ points: [CGPoint]?) -> Bool {
+    /// Internal rather than private: ``VideoGrade/isNeutral`` answers with it.
+    static func isActive(_ points: [CGPoint]?) -> Bool {
         guard let points, points.count >= 2 else { return false }
         return points.contains { abs($0.x - $0.y) > 0.001 }
     }

@@ -52,6 +52,13 @@ Image filter stages. Animated effects (grain, light leaks, film damage) read a
   as Core Image (no Metal/metallib). `brilliance`/`dehaze` are pixel-exact
   ports; the 12-band HSL uses standard *wrapped* hue.
 
+## The UI product
+
+`VideoGradeUI` is a separate library product — SwiftUI controls that bind to a
+`Binding<VideoGrade>`: a curves graph, split-tone wheels, a B&W hue bar, a
+12-band HSL editor, and a levels ramp. Separate so the engine stays headless
+for non-UI consumers.
+
 ## Requirements
 
 macOS 26 / iOS 26, Swift 6.2. No external dependencies.
@@ -66,4 +73,6 @@ swift test
 
 MIT — see [LICENSE](LICENSE).
 
-Bundled or downloaded models keep their own licences; see the notes above where a model is named.
+---
+
+This project is independent and is not affiliated with, endorsed by, or sponsored by Adobe Inc. Adobe and Lightroom are trademarks of Adobe Inc., registered in the U.S. and other countries.

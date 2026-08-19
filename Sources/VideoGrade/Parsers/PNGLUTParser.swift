@@ -48,11 +48,17 @@ public enum PNGLUTParser {
         // side = N·√N  →  N = side^(2/3); require an exact integer grid.
         let dimension = Int(round(pow(Double(side), 2.0 / 3.0)))
         let grid = Int(round(Double(dimension).squareRoot()))
-        guard grid * grid == dimension, grid * dimension == side else {
+        guard grid * grid == dimension, grid * dimension == side,
+              dimension <= CubeParser.maximumDimension else {
+            // The dimension bound matters as much as the grid: a 4096-pixel
+            // square factors cleanly to a 256-point cube, which Core Image
+            // cannot take — better refused here than rendered as nothing.
             throw PNGLUTError.unsupportedLayout(width: image.width, height: image.height)
         }
 
-        // Decode into straight RGBA8, top-down rows.
+        // Decode into RGBA8, top-down rows. Premultiplied is the context
+        // format, which for a LUT is the same as straight: every tile pixel
+        // is opaque, so alpha never scales anything.
         var pixels = [UInt8](repeating: 0, count: side * side * 4)
         guard let context = CGContext(
             data: &pixels,

@@ -246,8 +246,50 @@ public struct VideoGrade: Codable, Equatable, Sendable {
     public static let neutral = VideoGrade()
 
     /// Whether this grade changes any pixel.
+    ///
+    /// Semantic, not structural: a radius whose amount is zero, a tint whose
+    /// strength is zero, a mixer whose switch is off and a curve that lies on
+    /// the identity line all grade nothing, and a consumer skipping the
+    /// filter on this answer must be able to trust it. Comparing fields to
+    /// ``neutral`` was the old behaviour, and it called a grade active for
+    /// having a glow radius chosen while the glow itself was off.
     public var isNeutral: Bool {
-        self == .neutral
+        normalized == .neutral
+    }
+
+    /// The grade with its inert settings put back to their defaults — the
+    /// values that ride along without touching a pixel because the amount
+    /// that would apply them is off.
+    var normalized: VideoGrade {
+        var grade = self
+        if grade.lutURL == nil || grade.lutIntensity == 0 {
+            grade.lutURL = nil
+            grade.lutIntensity = 1
+        }
+        if grade.glow == 0 { grade.glowRadius = 25 }
+        if grade.halation == 0 { grade.halationRadius = 30 }
+        if grade.lightLeak == 0 { grade.lightLeakStyle = 0 }
+        if grade.splitShadow == nil || grade.splitShadowAmount == 0 {
+            grade.splitShadow = nil
+            grade.splitShadowAmount = 0
+        }
+        if grade.splitHighlight == nil || grade.splitHighlightAmount == 0 {
+            grade.splitHighlight = nil
+            grade.splitHighlightAmount = 0
+        }
+        if !grade.blackAndWhite {
+            grade.bwRed = 0; grade.bwOrange = 0; grade.bwYellow = 0; grade.bwGreen = 0
+            grade.bwAqua = 0; grade.bwBlue = 0; grade.bwPurple = 0; grade.bwMagenta = 0
+        }
+        if !ColorGradeCube.isActive(grade.curveRGB) { grade.curveRGB = nil }
+        if !ColorGradeCube.isActive(grade.curveRed) { grade.curveRed = nil }
+        if !ColorGradeCube.isActive(grade.curveGreen) { grade.curveGreen = nil }
+        if !ColorGradeCube.isActive(grade.curveBlue) { grade.curveBlue = nil }
+        // The cube only reads a complete 12-band set; anything else is inert.
+        if let bands = grade.hslBands, bands.count != 12 || bands.allSatisfy(\.isIdentity) {
+            grade.hslBands = nil
+        }
+        return grade
     }
 }
 

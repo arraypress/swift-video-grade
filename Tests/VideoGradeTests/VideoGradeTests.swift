@@ -63,6 +63,61 @@ struct GradeTests {
         #expect(throws: CubeParser.CubeError.self) { try CubeParser.parse("LUT_3D_SIZE 2\n0 0 0") }
     }
 
+    @Test("A corrupt size line is refused before it allocates")
+    func cubeSizeBound() {
+        // The declared size is untrusted input: 100000 would mean petabytes
+        // of floats. The refusal has to come from reading the header, not
+        // from the allocator giving up.
+        #expect(throws: CubeParser.CubeError.unsupportedSize(100_000)) {
+            try CubeParser.parse("LUT_3D_SIZE 100000\n0 0 0")
+        }
+        #expect(throws: CubeParser.CubeError.unsupportedSize(129)) {
+            try CubeParser.parse("LUT_3D_SIZE 129\n0 0 0")
+        }
+    }
+
+    @Test("Inert settings do not make a grade non-neutral")
+    func semanticNeutrality() throws {
+        // Each of these carries a value that grades nothing, because the
+        // amount that would apply it is off.
+        var radius = VideoGrade(); radius.glowRadius = 8
+        #expect(radius.isNeutral)
+        var leak = VideoGrade(); leak.lightLeakStyle = 3
+        #expect(leak.isNeutral)
+        var tint = VideoGrade(); tint.splitShadow = .blue   // amount stays 0
+        #expect(tint.isNeutral)
+        var mixer = VideoGrade(); mixer.bwRed = 1           // blackAndWhite stays false
+        #expect(mixer.isNeutral)
+        var flat = VideoGrade(); flat.curveRGB = [CGPoint(x: 0, y: 0), CGPoint(x: 1, y: 1)]
+        #expect(flat.isNeutral)
+        var short = VideoGrade(); short.hslBands = [HSLBand(hue: 1)]  // cube needs 12
+        #expect(short.isNeutral)
+
+        // And the pixels agree: the inert grade renders the same bytes.
+        let base = CIImage(color: CIColor(red: 0.6, green: 0.4, blue: 0.3))
+            .cropped(to: CGRect(x: 0, y: 0, width: 8, height: 8))
+        #expect(imageBytes(try GradeFilter(grade: tint).apply(base), side: 8)
+                == imageBytes(try GradeFilter(grade: .neutral).apply(base), side: 8))
+
+        // The driver switching on still reads as active.
+        var live = tint; live.splitShadowAmount = 0.4
+        #expect(!live.isNeutral)
+    }
+
+    @Test("An absurd temperature is clamped, not handed to Core Image")
+    func temperatureClamp() throws {
+        let gray = CIImage(color: CIColor(red: 0.5, green: 0.5, blue: 0.5))
+            .cropped(to: CGRect(x: 0, y: 0, width: 8, height: 8))
+        // Past 13000K the naive reflection goes to zero Kelvin and below —
+        // not a color. Clamped, it stays a very warm white balance.
+        var scorching = VideoGrade(); scorching.temperature = 20_000
+        let hot = renderPixel(try GradeFilter(grade: scorching).apply(gray))
+        #expect(hot.r > hot.b)
+        var freezing = VideoGrade(); freezing.temperature = 1
+        let cold = renderPixel(try GradeFilter(grade: freezing).apply(gray))
+        #expect(cold.b > cold.r)
+    }
+
     @Test("Neutral grade is detected; adjusted grades apply")
     func neutrality() throws {
         #expect(VideoGrade().isNeutral)

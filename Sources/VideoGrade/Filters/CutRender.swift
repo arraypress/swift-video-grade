@@ -21,6 +21,9 @@ public enum CutRender {
         }
     }
 
+    /// Applies a boundary effect at `strength` (`0` = untouched, `1` = the
+    /// boundary frame itself). Styles the pipeline does not handle — dip and
+    /// punch — return the image unchanged; see ``needsCoreImage(_:)``.
     public static func apply(style: CutStyle, strength: Double, to image: CIImage) -> CIImage {
         guard strength > 0.01 else { return image }
         let extent = image.extent
