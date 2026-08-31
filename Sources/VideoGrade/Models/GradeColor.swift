@@ -42,24 +42,8 @@ public struct GradeColor: Codable, Equatable, Hashable, Sendable {
     /// Creates a color from a hex string like `"#FFD60A"`, `"FFD60A"`, or
     /// `"#FFD60AFF"` (with alpha). Returns `nil` for malformed input.
     public init?(hex: String) {
-        var value = hex.trimmingCharacters(in: .whitespaces)
-        if value.hasPrefix("#") { value.removeFirst() }
-        guard value.count == 6 || value.count == 8,
-              let bits = UInt64(value, radix: 16) else { return nil }
-        if value.count == 6 {
-            self.init(
-                red: Double((bits >> 16) & 0xFF) / 255,
-                green: Double((bits >> 8) & 0xFF) / 255,
-                blue: Double(bits & 0xFF) / 255
-            )
-        } else {
-            self.init(
-                red: Double((bits >> 24) & 0xFF) / 255,
-                green: Double((bits >> 16) & 0xFF) / 255,
-                blue: Double((bits >> 8) & 0xFF) / 255,
-                alpha: Double(bits & 0xFF) / 255
-            )
-        }
+        guard let c = GradeColorHex.components(hex) else { return nil }
+        self.init(red: c.red, green: c.green, blue: c.blue, alpha: c.alpha)
     }
 
     /// The same color with a different alpha.
