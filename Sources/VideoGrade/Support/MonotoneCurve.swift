@@ -38,7 +38,14 @@ struct MonotoneCurve {
 
         let n = p.count
         let xs = p.map(\.0), ys = p.map(\.1)
-        let d = (0..<(n - 1)).map { (ys[$0 + 1] - ys[$0]) / (xs[$0 + 1] - xs[$0]) }
+        // Spelled out with types: Swift 6.2 (Xcode 26, the CI toolchain) times
+        // out type-checking the one-line closure, then reads `d` as Duration.
+        var d = [Double](repeating: 0, count: n - 1)
+        for i in 0..<(n - 1) {
+            let rise: Double = ys[i + 1] - ys[i]
+            let run: Double = xs[i + 1] - xs[i]
+            d[i] = rise / run
+        }
         var ms = [Double](repeating: 0, count: n)
         ms[0] = d[0]
         ms[n - 1] = d[n - 2]
@@ -54,7 +61,7 @@ struct MonotoneCurve {
             let a = ms[i] / d[i], b = ms[i + 1] / d[i]
             let s = a * a + b * b
             if s > 9 {
-                let t = 3 / s.squareRoot()
+                let t: Double = 3 / s.squareRoot()
                 ms[i] = t * a * d[i]
                 ms[i + 1] = t * b * d[i]
             }
