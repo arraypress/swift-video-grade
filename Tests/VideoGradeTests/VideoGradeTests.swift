@@ -406,9 +406,10 @@ struct LightroomPresetTests {
         #expect(!grade.isNeutral)
     }
 
-    @Test("Grayscale presets kill saturation")
+    @Test("Grayscale presets become a Lightroom black & white mix")
     func grayscale() {
         let grade = LightroomPreset.grade(fromXMP: #"<rdf:Description crs:ConvertToGrayscale="True"/>"#)
-        #expect(grade.saturation == 0)
+        #expect(grade.monochromeMix == MonochromeMix())
+        #expect(!grade.isNeutral)
     }
 }

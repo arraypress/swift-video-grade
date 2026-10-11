@@ -1,0 +1,56 @@
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+ <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <rdf:Description rdf:about="" xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/">
+   <crs:Version>16.0</crs:Version>
+   <crs:ConvertToGrayscale>True</crs:ConvertToGrayscale>
+   <crs:GrayMixerRed>+20</crs:GrayMixerRed>
+   <crs:GrayMixerBlue>-30</crs:GrayMixerBlue>
+   <crs:ColorGradeGlobalHue>200</crs:ColorGradeGlobalHue>
+   <crs:ColorGradeGlobalSat>10</crs:ColorGradeGlobalSat>
+   <crs:PostCropVignetteAmount>+20</crs:PostCropVignetteAmount>
+   <crs:Name>
+    <rdf:Alt>
+     <rdf:li xml:lang="x-default">Test Mono</rdf:li>
+    </rdf:Alt>
+   </crs:Name>
+   <crs:ToneCurvePV2012>
+    <rdf:Seq>
+     <rdf:li>0, 12</rdf:li>
+     <rdf:li>64, 60</rdf:li>
+     <rdf:li>192, 200</rdf:li>
+     <rdf:li>255, 245</rdf:li>
+    </rdf:Seq>
+   </crs:ToneCurvePV2012>
+   <crs:ToneCurvePV2012Red>
+    <rdf:Seq>
+     <rdf:li>0, 0</rdf:li>
+     <rdf:li>255, 255</rdf:li>
+    </rdf:Seq>
+   </crs:ToneCurvePV2012Red>
+   <crs:ToneCurvePV2012Blue>
+    <rdf:Seq>
+     <rdf:li>0, 0</rdf:li>
+     <rdf:li>128, 140</rdf:li>
+     <rdf:li>255, 255</rdf:li>
+    </rdf:Seq>
+   </crs:ToneCurvePV2012Blue>
+   <crs:ToneCurve>
+    <rdf:Seq>
+     <rdf:li>0, 0</rdf:li>
+     <rdf:li>128, 150</rdf:li>
+     <rdf:li>255, 255</rdf:li>
+    </rdf:Seq>
+   </crs:ToneCurve>
+   <crs:Look>
+    <rdf:Description crs:Name="Adobe Monochrome" crs:Amount="1"/>
+   </crs:Look>
+   <crs:MaskGroupBasedCorrections>
+    <rdf:Seq>
+     <rdf:li>
+      <rdf:Description crs:What="Correction" crs:CorrectionAmount="1" crs:LocalExposure2012="0.5" crs:Exposure2012="+3.00"/>
+     </rdf:li>
+    </rdf:Seq>
+   </crs:MaskGroupBasedCorrections>
+  </rdf:Description>
+ </rdf:RDF>
+</x:xmpmeta>

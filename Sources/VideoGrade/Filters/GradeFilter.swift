@@ -13,7 +13,7 @@ import Foundation
 /// **One builder, two consumers**: the exporter applies it per frame, and
 /// the app applies the same instance through the player's video composition
 /// — grading obeys the same parity rule as captions.
-public struct GradeFilter: @unchecked Sendable {
+public struct GradeFilter: Sendable {
 
     /// The grade this filter was built from, exactly as given.
     public let grade: VideoGrade
@@ -21,6 +21,9 @@ public struct GradeFilter: @unchecked Sendable {
     private let lut: (dimension: Int, data: Data)?
     /// Baked split-tone / skin-tone / B&W cube, built once from the grade.
     private let toneCube: (dimension: Int, data: Data)?
+    /// Baked Lightroom develop cube (whites/blacks, mixer, B&W mix,
+    /// grading, tone curve) over squeezed values, so HDR survives it.
+    private let developCube: Data?
 
     /// Parsed LUTs, cached process-wide by path + modification time — a LUT
     /// is parsed once ever, shared across preview, thumbnails, and export.
@@ -42,6 +45,7 @@ public struct GradeFilter: @unchecked Sendable {
         self.grade = grade
         // Bake the hue/tone LUT up-front (once per grade change), not per frame.
         toneCube = ColorGradeCube.data(for: grade).map { (ColorGradeCube.dimension, $0) }
+        developCube = DevelopCube.data(for: grade)
         guard let url = grade.lutURL, grade.lutIntensity > 0 else {
             lut = nil
             return
@@ -110,6 +114,10 @@ public struct GradeFilter: @unchecked Sendable {
                 "inputTargetNeutral": CIVector(x: target, y: -tint),
             ])
         }
+        // Lightroom Dehaze works on the scene before its tones are shaped.
+        if grade.hazeRemoval != 0 {
+            image = HazeRemoval.apply(image, amount: grade.hazeRemoval)
+        }
         if grade.highlights != 1 || grade.shadows != 0 {
             image = image.applyingFilter("CIHighlightShadowAdjust", parameters: [
                 "inputHighlightAmount": grade.highlights,
@@ -171,6 +179,11 @@ public struct GradeFilter: @unchecked Sendable {
                 "inputColorSpace": CGColorSpace(name: CGColorSpace.sRGB)!,
             ]).cropped(to: input.extent)
         }
+        // Lightroom develop controls — tone, colour, then the tone curve —
+        // as one cube that carries values above white.
+        if let developCube {
+            image = RangeShaper.apply(cube: developCube, dimension: DevelopCube.dimension, to: image)
+        }
         // Filmic highlight rolloff: a soft shoulder near white so highlights
         // don't clip hard — blacks and midtones essentially untouched. Applied
         // before the bloom stages so they act on the rolled-off highlights.
@@ -185,11 +198,17 @@ public struct GradeFilter: @unchecked Sendable {
         }
         // Clarity: local-contrast punch — a wide-radius unsharp mask, unlike
         // the small-radius edge sharpen above.
+        // Texture: the fine-detail band, below clarity's radius.
+        if grade.texture != 0 {
+            image = DetailBands.texture(image, amount: grade.texture)
+        }
         if grade.clarity > 0 {
             image = image.applyingFilter("CIUnsharpMask", parameters: [
                 "inputRadius": 15.0,
                 "inputIntensity": grade.clarity * 0.9,
             ]).cropped(to: input.extent)
+        } else if grade.clarity < 0 {
+            image = DetailBands.softenClarity(image, amount: grade.clarity)
         }
         // Glow/bloom: blur → soft bright-pass → screen back over the source.
         if grade.glow > 0 {

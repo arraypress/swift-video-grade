@@ -22,6 +22,12 @@ let package = Package(
     targets: [
         .target(name: "VideoGrade"),
         .target(name: "VideoGradeUI", dependencies: ["VideoGrade"]),
-        .testTarget(name: "VideoGradeTests", dependencies: ["VideoGrade"]),
+        .testTarget(
+            name: "VideoGradeTests",
+            dependencies: ["VideoGrade"],
+            // Golden renders and recipes written by 0.1.1 / img 0.6.0 —
+            // what "nothing changed at the defaults" is measured against.
+            resources: [.copy("Fixtures")]
+        ),
     ]
 )

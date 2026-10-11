@@ -46,6 +46,9 @@ enum GradeNormalization {
         if let bands = grade.hslBands, bands.count != 12 || bands.allSatisfy(\.isIdentity) {
             grade.hslBands = nil
         }
+        if grade.toneCurve?.isIdentity == true { grade.toneCurve = nil }
+        if grade.colorMixer?.isIdentity == true { grade.colorMixer = nil }
+        if grade.colorGrading?.isIdentity == true { grade.colorGrading = nil }
         return grade
     }
 }

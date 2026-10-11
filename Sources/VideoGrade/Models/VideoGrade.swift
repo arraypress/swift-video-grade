@@ -150,8 +150,39 @@ public struct VideoGrade: Codable, Equatable, Sendable {
     public var brilliance: Double = 0
 
     /// Haze removal — contrast + saturation with a black deepen (`-1…1`,
-    /// `0` = untouched; negative softens).
+    /// `0` = untouched; negative softens). A per-pixel approximation kept
+    /// for the grades that use it; ``hazeRemoval`` is Lightroom's Dehaze.
     public var dehaze: Double = 0
+
+    // MARK: - Lightroom develop controls (definitions from LightCraft, a
+    // clean-room Lightroom reimplementation, MIT OR Apache-2.0). Every one
+    // defaults to "untouched", HDR values above 1 pass through, and
+    // transparent pixels stay transparent.
+
+    /// Lightroom Whites: moves the upper tones, `-1…1` (−100…100).
+    public var whites: Double = 0
+
+    /// Lightroom Blacks: moves the lower tones, `-1…1` (−100…100).
+    public var blacks: Double = 0
+
+    /// Lightroom Texture: fine detail, `-1…1`; negative smooths it.
+    public var texture: Double = 0
+
+    /// Lightroom Dehaze, `-1…1`: a dark-channel-prior estimate of the haze
+    /// veil and its airlight, removed (positive) or added (negative).
+    public var hazeRemoval: Double = 0
+
+    /// Lightroom's parametric + point tone curve (`nil` = untouched).
+    public var toneCurve: ToneCurve?
+
+    /// Lightroom's eight-band colour mixer (`nil` = untouched).
+    public var colorMixer: ColorMixer?
+
+    /// Lightroom's three-way colour grading (`nil` = untouched).
+    public var colorGrading: ColorGrading?
+
+    /// Lightroom-style black & white with an eight-band mix; set = mono.
+    public var monochromeMix: MonochromeMix?
 
     public init(
         lutURL: URL? = nil,
@@ -240,6 +271,14 @@ public struct VideoGrade: Codable, Equatable, Sendable {
         clarity = try container.decodeIfPresent(Double.self, forKey: .clarity) ?? 0
         brilliance = try container.decodeIfPresent(Double.self, forKey: .brilliance) ?? 0
         dehaze = try container.decodeIfPresent(Double.self, forKey: .dehaze) ?? 0
+        whites = try container.decodeIfPresent(Double.self, forKey: .whites) ?? 0
+        blacks = try container.decodeIfPresent(Double.self, forKey: .blacks) ?? 0
+        texture = try container.decodeIfPresent(Double.self, forKey: .texture) ?? 0
+        hazeRemoval = try container.decodeIfPresent(Double.self, forKey: .hazeRemoval) ?? 0
+        toneCurve = try container.decodeIfPresent(ToneCurve.self, forKey: .toneCurve)
+        colorMixer = try container.decodeIfPresent(ColorMixer.self, forKey: .colorMixer)
+        colorGrading = try container.decodeIfPresent(ColorGrading.self, forKey: .colorGrading)
+        monochromeMix = try container.decodeIfPresent(MonochromeMix.self, forKey: .monochromeMix)
     }
 
     /// No grading at all.
