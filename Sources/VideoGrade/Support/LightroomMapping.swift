@@ -36,7 +36,7 @@ enum LightroomMapping {
         if let v = num("Contrast2012") { grade.contrast = clamp(1 + v / 100 * 0.5, 0.5, 1.8) }
         if let v = num("Saturation") { grade.saturation = clamp(1 + v / 100, 0, 2) }
         if let v = num("Vibrance") { grade.vibrance = clamp(v / 100, -1, 1) }
-        if let v = num("Highlights2012") { grade.highlights = clamp(1 + v / 100 * 0.7, 0.3, 1) }
+        if let v = num("Highlights2012") { grade.highlights = SliderScale.highlights(recovery: -v / 100) }
         if let v = num("Shadows2012") { grade.shadows = clamp(v / 100 * 0.7, -0.7, 0.7) }
         // Lightroom's default capture sharpening is 40 — neutral here.
         if let v = num("Sharpness") { grade.sharpness = clamp((v - 40) / 110 * 1.5, 0, 2) }
@@ -44,9 +44,9 @@ enum LightroomMapping {
         if let t = xmp.number("Temperature"), (2000...20000).contains(t) {
             grade.temperature = clamp(t, 3500, 9500)
         } else if let i = xmp.number("IncrementalTemperature") {
-            grade.temperature = clamp(6500 + i * 25, 3500, 9500)
+            grade.temperature = SliderScale.kelvin(i / 100)
         }
-        if let t = xmp.number("Tint") ?? xmp.number("IncrementalTint") { grade.tint = clamp(t, -100, 100) }
+        if let t = xmp.number("Tint") ?? xmp.number("IncrementalTint") { grade.tint = SliderScale.tint(t / 100) }
 
         // Whites, blacks, presence.
         if let v = unit("Whites2012") { grade.whites = v }

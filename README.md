@@ -22,6 +22,11 @@ let output = filter.apply(inputImage, time: currentTime)   // CIImage → CIImag
 
 `VideoGrade` is a pure-data description; `GradeFilter` resolves it to Core Image.
 
+**Sliders vs engine units.** `temperature` is Kelvin, `tint` ±100 and `highlights` a
+Core Image amount where 1 is untouched — not slider values. Bind UI sliders and CLI
+flags to `temperatureSlider` and `tintSlider` (−1…1) and `highlightRecovery` (0…1)
+instead, the scale the Lightroom importer uses (0.2.1; img 0.6.0 got this wrong).
+
 - **Tone / color:** exposure, brightness, contrast, saturation, vibrance,
   temperature, tint, highlights, shadows, levels (black/white/gamma), tone
   curves (master + per-channel), clarity, brilliance, dehaze.
