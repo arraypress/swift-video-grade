@@ -1,7 +1,7 @@
 # VideoGrade
 
-A color-grading and film-look engine for video frames — **pure Core Image, zero
-dependencies**. One filter builder drives both a live
+A color-grading and film-look engine for video frames — **pure Core Image, no
+dependencies in the engine**. One filter builder drives both a live
 `AVPlayerItem.videoComposition` and an offline exporter, so preview and export
 match by construction.
 
@@ -136,9 +136,29 @@ there.
 12-band HSL editor, and a levels ramp. Separate so the engine stays headless
 for non-UI consumers.
 
+## Look files
+
+`VideoGradeLook` is the grade as a look file holds it: the settings that
+differ from an untouched grade, snake_case, with the LUT as a path — the
+`grade` section `img`, `vid` and `design` read and write, so one look serves
+all three.
+
+```swift
+import VideoGradeLook
+
+let look = try LookFile.read(URL(fileURLWithPath: "teal.json"))   // an img/vid recipe, or a bare grade section
+let filter = try GradeFilter(grade: look.resolved)
+```
+
+Reading is strict (a misspelt setting is refused with the one it was likely
+meant to be). `GradeLookJSON.sections(under:)`, `check(_:at:)` and
+`kinds(under:)` give a tool's own recipe format the same rules and its
+`--set` kinds. This product depends on swift-recipe-kit; the engine does not.
+
 ## Requirements
 
-macOS 26 / iOS 26, Swift 6.2. No external dependencies. Both products build for
+macOS 26 / iOS 26, Swift 6.2. The engine and UI products have no external
+dependencies; `VideoGradeLook` uses swift-recipe-kit. The engine and UI build for
 the iOS Simulator (checked with `xcodebuild -destination 'generic/platform=iOS Simulator'`).
 
 ## Tests

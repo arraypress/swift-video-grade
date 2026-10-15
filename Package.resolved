@@ -1,0 +1,15 @@
+{
+  "originHash" : "0d47c91127921b4d04cea682e138664e0662339bdbc5cbf695e87a655414e0ba",
+  "pins" : [
+    {
+      "identity" : "swift-recipe-kit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/arraypress/swift-recipe-kit.git",
+      "state" : {
+        "revision" : "602320faf22a10f49d72a91c7f515df9fd854298",
+        "version" : "0.3.1"
+      }
+    }
+  ],
+  "version" : 3
+}

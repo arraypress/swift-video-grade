@@ -18,10 +18,27 @@ let package = Package(
         // editor, and a levels ramp. Separate product so the engine stays
         // headless for non-UI consumers.
         .library(name: "VideoGradeUI", targets: ["VideoGradeUI"]),
+
+        // A grade as a look file holds it — the sparse, snake_case `grade`
+        // section img, vid and design read and write, with its strict-key
+        // rules and `--set` kinds. Separate product so the engine itself
+        // stays dependency-free.
+        .library(name: "VideoGradeLook", targets: ["VideoGradeLook"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/arraypress/swift-recipe-kit.git", from: "0.3.1"),
     ],
     targets: [
         .target(name: "VideoGrade"),
         .target(name: "VideoGradeUI", dependencies: ["VideoGrade"]),
+        .target(name: "VideoGradeLook", dependencies: [
+            "VideoGrade",
+            .product(name: "RecipeKit", package: "swift-recipe-kit"),
+        ]),
+        .testTarget(name: "VideoGradeLookTests", dependencies: [
+            "VideoGradeLook",
+            .product(name: "RecipeKit", package: "swift-recipe-kit"),
+        ]),
         .testTarget(
             name: "VideoGradeTests",
             dependencies: ["VideoGrade"],
